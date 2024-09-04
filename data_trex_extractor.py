@@ -179,14 +179,14 @@ def load_prompts_from_trex(
                     by_category[category].append(
                         {
                         "subject": answer,
-                        "answer": question
+                        "target": question
                         }
                     )
                 else:
                      by_category[category].append(
                         {
                         "subject": question,
-                        "answer": answer
+                        "target": answer
                         }
                     )
         # Subsample if needed
