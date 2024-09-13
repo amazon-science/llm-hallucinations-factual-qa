@@ -9,7 +9,7 @@ It brings in basic plotting packages as well as captum, which is needed for coll
 
 An overview of the datasets/models used can be found in the paper under the section 4 **Experimental setup** section of the paper.
 In particular, while our **result_collector.py** uses **TriviaQA** directly, for TREX we do/save a sampling in the form of founders/capitals/place_of_birth.csv.
-Please consult https://hadyelsahar.github.io/t-rex/
+Run `trex_parser.py` to create these data files.
 
 ## Artifact data collection
 
