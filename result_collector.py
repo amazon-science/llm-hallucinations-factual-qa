@@ -21,7 +21,7 @@ iteration = 0
 interval = 2500 # We run the inference on these many examples at a time to achieve parallelization
 start = iteration * interval
 end = start + interval
-dataset_name = "place_of_birth" # "trivia_qa" #"capitals"
+dataset_name =  "place_of_birth" # "trivia_qa" #"capitals"
 trex_data_to_question_template = {
     "capitals": Template("What is the capital of $source?"),
     "place_of_birth": Template("Where was $source born?"),
@@ -89,12 +89,12 @@ def get_stop_token():
     return stop_token
 
 
-def load_data():
+def load_data(dataset_name):
     if dataset_name in trex_data_to_question_template.keys():
         pd_frame = pd.read_csv(data_dir / f'{dataset_name}.csv')
         dataset = [(pd_frame.iloc[i]['subject'], pd_frame.iloc[i]['object'].split("<OR>")) for i in range(start, min(end, len(pd_frame)))]
     elif dataset_name=="trivia_qa":
-        trivia_qa = load_dataset('trivia_qa', 'rc.nocontext', cache_dir=str(data_dir))
+        trivia_qa = load_dataset('trivia_qa', data_dir='rc.nocontext', cache_dir=str(data_dir))
         full_dataset = []
         for obs in tqdm(trivia_qa['train']):
             aliases = []
@@ -128,7 +128,7 @@ def generate_response(x, model, *, max_length=100, pbar=False):
 
 
 def answer_question(question, model, tokenizer, *, max_length=100, pbar=False):
-    input_ids = tokenizer(question, return_tensors='pt').input_ids.to(device)
+    input_ids = tokenizer(question, return_tensors='pt').input_ids.to(model.device)
     response, logits = generate_response(input_ids, model, max_length=max_length, pbar=pbar)
     return response, logits, input_ids.shape[-1]
 
@@ -209,7 +209,7 @@ def get_embedder(model):
         raise ValueError(f"Unknown model {model_name}")
 
 def get_ig(prompt, forward_func, tokenizer, embedder, model):
-    input_ids = tokenizer(prompt, return_tensors='pt').input_ids.to(device)
+    input_ids = tokenizer(prompt, return_tensors='pt').input_ids.to(model.device)
     prediction_id = get_next_token(input_ids, model).squeeze()[-1].argmax()
     encoder_input_embeds = embedder(input_ids).detach() # fix this for each model
     ig = IntegratedGradients(forward_func=forward_func)
@@ -227,7 +227,7 @@ def get_ig(prompt, forward_func, tokenizer, embedder, model):
 def compute_and_save_results():
 
     # Dataset
-    dataset = load_data()
+    dataset = load_data(dataset_name)
     if dataset_name in trex_data_to_question_template.keys():
         question_asker = functools.partial(answer_trex, question_template=trex_data_to_question_template[dataset_name])
     elif dataset_name == "trivia_qa":
